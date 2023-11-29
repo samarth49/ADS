@@ -1,83 +1,127 @@
-#include<stdio.h>
-#include<stdlib.h>
-struct node{
-	int data;
-	struct node *left;
-	struct node *right;
-}*root=NULL;
-struct node *create(int data){
-	struct node *temp=(struct node*)malloc(sizeof(struct node));
-	temp->data=data;
-	temp->right=NULL;
-	temp->left=NULL;
-	return temp;
-}
-struct node *insert(struct node *root,int key){
-	struct node *newNode=create(key);
-	if(root==NULL){
-		return newNode;
-	}
-	struct node *current = root;
-	while(1){
-		if(current->data  > key){
-			if(current->left==NULL){
-				current->left=newNode;
-				break;
-			}
-			current=current->left;
-		}
-		else if(current->data < key){
-			if(current->right==NULL){
-				current->right=newNode;
-				break;
-			}
-			current=current->right;
-		}
-		else{
-			free(newNode);
-			break;
-		}
-	}
-	return root;
-}
-void inorder(struct node *root){
-	struct node *temp=root;
-	if(temp){
-		inorder(temp->left);
-		printf("%d ",temp->data);
-		inorder(temp->right);
-	}
-}
-void post(struct node *root){
-	struct node *current =root;
-	struct node *stack[100];
-	int top=-1;
-	struct node *prev =NULL;
-	do{
-		//go to last
-		while(current){
-			st[++top]=current;
-			current=current->left;
-		}
-		if(top!=-1){
-			struct node *temp = st[top];
-			if(temp->right && temp->right!=prev){
-				current=temp->right;
-			}
-			else{
-				printf("%d ",temp->data);
-				prev=temp;
-				top--;
-			}
-		}
-	}while(current || top !=-1);
-	
+#include <stdio.h>
+#include <stdlib.h>
+
+// Node structure for the binary search tree
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+// Function to create a new node
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
 }
 
-int main(){
-	root = insert(root,30);
-	root = insert(root,10);
-	root = insert(root,60);
-	root = insert(root,50);
-	inorder(root);
+// Function to insert a value into the BST
+struct Node* insert(struct Node* root, int value) {
+    if (root == NULL) {
+        return createNode(value);
+    }
+
+    if (value < root->data) {
+        root->left = insert(root->left, value);
+    } else if (value > root->data) {
+        root->right = insert(root->right, value);
+    }
+
+    return root;
+}
+
+// Function to find the minimum value node in a BST
+struct Node* findMin(struct Node* node) {
+    while (node->left != NULL) {
+        node = node->left;
+    }
+    return node;
+}
+
+// Function to delete a node with a given value from the BST
+struct Node* deleteNode(struct Node* root, int value) {
+    if (root == NULL) {
+        return root;
+    }
+
+    if (value < root->data) {
+        root->left = deleteNode(root->left, value);
+    } else if (value > root->data) {
+        root->right = deleteNode(root->right, value);
+    } else {
+        // Node with only one child or no child
+        if (root->left == NULL) {
+            struct Node* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            struct Node* temp = root->left;
+            free(root);
+            return temp;
+        }
+
+        // Node with two children: Get the inorder successor (smallest
+        // in the right subtree) and copy its data to this node
+        struct Node* temp = findMin(root->right);
+        root->data = temp->data;
+
+        // Delete the inorder successor
+        root->right = deleteNode(root->right, temp->data);
+    }
+
+    return root;
+}
+
+// Function to display the BST level-wise
+void displayLevelWise(struct Node* root) {
+    if (root == NULL) {
+        return;
+    }
+
+    struct Node* queue[100]; // Assuming a maximum of 100 nodes
+    int front = 0, rear = 0;
+
+    queue[rear++] = root;
+
+    while (front < rear) {
+        struct Node* current = queue[front++];
+        printf("%d ", current->data);
+
+        if (current->left != NULL) {
+            queue[rear++] = current->left;
+        }
+        if (current->right != NULL) {
+            queue[rear++] = current->right;
+        }
+    }
+
+    printf("\n");
+}
+
+int main() {
+    struct Node* root = NULL;
+
+    // Inserting values into the BST
+    root = insert(root, 50);
+    insert(root, 30);
+    insert(root, 20);
+    insert(root, 40);
+    insert(root, 70);
+    insert(root, 60);
+    insert(root, 80);
+
+    // Displaying the BST level-wise
+    printf("BST Level-wise: ");
+    displayLevelWise(root);
+
+    // Deleting a node (e.g., deleting node with value 30)
+    int valueToDelete = 30;
+    root = deleteNode(root, valueToDelete);
+    printf("BST Level-wise after deleting node with value %d: ", valueToDelete);
+    displayLevelWise(root);
+
+    // Free the allocated memory before exiting
+    // This should be done recursively, but for simplicity, we skip it here
+    return 0;
 }
